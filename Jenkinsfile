@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/yourusername/node-ci-cd-demo.git'
+                git branch: 'master', url: 'https://github.com/Syed-Amjad/node-ci-cd.git'
             }
         }
 
