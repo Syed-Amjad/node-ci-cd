@@ -2,10 +2,10 @@
   "name": "node-ci-cd-demo",
   "version": "1.0.0",
   "description": "Lightweight Node.js app for Jenkins CI/CD demo",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js",
-    "test": "jest"
+    "start": "node server.js",
+    "test": "jest --detectOpenHandles"
   },
   "dependencies": {
     "express": "^4.18.2"
@@ -15,4 +15,3 @@
     "supertest": "^6.3.3"
   }
 }
-
