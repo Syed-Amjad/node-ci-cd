@@ -44,7 +44,7 @@ pipeline {
                 body: """<p>Build failed for job: ${env.JOB_NAME}</p>
                          <p>Build Number: ${env.BUILD_NUMBER}</p>
                          <p>Check Jenkins for details: ${env.BUILD_URL}</p>""",
-                to: 'your-email@example.com',
+                to: 'syed.rulzz.1993@gmail.com',
                 mimeType: 'text/html'
             )
         }
