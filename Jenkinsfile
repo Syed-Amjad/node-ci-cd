@@ -1,12 +1,7 @@
 pipeline {
     agent any
 
-    tools {
-        // Make sure NodeJS is installed via Jenkins' "Global Tool Configuration"
-        nodejs "Node20" 
-    }
-
-    stages {
+      stages {
         stage('Checkout') {
             steps {
                 cleanWs()
