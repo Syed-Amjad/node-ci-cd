@@ -11,7 +11,7 @@ pipeline {
     APP_PORT = '3000'
   }
   triggers {
-    // Webhook will call /github-webhook/; also enable "GitHub hook trigger for GITScm polling" in job
+    githubPush()
   }
   stages {
     stage('Checkout') {
