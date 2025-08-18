@@ -4,15 +4,16 @@ pipeline {
     timestamps()
     buildDiscarder(logRotator(numToKeepStr: '20'))
     disableConcurrentBuilds()
+    skipDefaultCheckout(true)   // avoid double "Declarative: Checkout SCM"
   }
   environment {
-    // Replace with your Docker Hub repo: username/image
-    DOCKER_REPO = 'amjad835/node-hello-prod'
+    DOCKER_REPO = 'amjad835/node-hello-prod' // <-- change me
     APP_PORT = '3000'
   }
   triggers {
     githubPush()
   }
+
   stages {
     stage('Checkout') {
       steps {
@@ -20,8 +21,25 @@ pipeline {
         checkout scm
         script {
           env.GIT_SHORT = sh(script: "git rev-parse --short=7 HEAD", returnStdout: true).trim()
-          env.VERSION = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
+        }
+      }
+    }
+
+    stage('Resolve version') {
+      agent {
+        docker {
+          image 'node:20-alpine'
+          args '-u root'
+        }
+      }
+      steps {
+        script {
+          env.VERSION = sh(
+            script: "node -p \"require('./package.json').version\"",
+            returnStdout: true
+          ).trim()
           env.IMAGE_TAG = "${env.VERSION}-${env.GIT_SHORT}"
+          echo "Resolved VERSION=${env.VERSION}, IMAGE_TAG=${env.IMAGE_TAG}"
         }
       }
     }
@@ -72,7 +90,6 @@ pipeline {
         sh '''
           set -e
           npm ci --omit=dev
-          # Fail build on high/critical production vulns
           npm audit --omit=dev --audit-level=high
         '''
       }
@@ -98,24 +115,22 @@ pipeline {
           CONTAINER_NAME=node-hello-prod
           NEW_IMAGE=${DOCKER_REPO}:${IMAGE_TAG}
 
-          # Stop and remove existing container if present
           docker rm -f $CONTAINER_NAME || true
 
-          # Run updated container with resource limits (t2.micro friendly)
-          docker run -d --name $CONTAINER_NAME \\
-            --restart unless-stopped \\
-            --memory=256m --cpus=0.5 \\
-            -e NODE_ENV=production \\
-            -e APP_VERSION=${VERSION} \\
-            -p ${APP_PORT}:3000 \\
+          docker run -d --name $CONTAINER_NAME \
+            --restart unless-stopped \
+            --memory=256m --cpus=0.5 \
+            -e NODE_ENV=production \
+            -e APP_VERSION=${VERSION} \
+            -p ${APP_PORT}:3000 \
             $NEW_IMAGE
 
-          # Cleanup old dangling images to save disk
           docker image prune -f || true
         """
       }
     }
   }
+
   post {
     success {
       echo "Deployed ${DOCKER_REPO}:${IMAGE_TAG} on EC2, reachable on port ${APP_PORT}"
@@ -125,4 +140,3 @@ pipeline {
     }
   }
 }
-
